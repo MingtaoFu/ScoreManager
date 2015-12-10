@@ -133,11 +133,31 @@ SHOWONESEC:
 SETSEC:
 	CALL GETNUM
 	
+	;显示提示
 	LEA DX,SETSCOREDIR
 	MOV AH,9
 	INT 21H
 	
 	ENTER1 CRLF
+	
+	;读入输入的分数，放到BUF
+	LEA DX,BUF
+	MOV AH,0AH
+	INT 21H
+	
+	
+	;学号（数字）放在CL中
+	MOV AL,CL
+
+	;分数为2位数，将学号×2，以定位到分数字符串的指定位置
+	MUL CHENG2
+	MOV BX,AX
+	
+	LEA SI,BUF[2]
+	LEA DI,SCORE6[BX]
+	
+	MOVSB
+	MOVSB
 	
 	JMP L  
 
@@ -296,6 +316,8 @@ CALC ENDP
 
 CODES ENDS
     END START
+
+
 
 
 
