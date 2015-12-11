@@ -1,15 +1,15 @@
 .386
 DATAS SEGMENT USE16
     ;此处输入数据段代码  
-    SCORE1 DB '6375638472847362748273719473945927499865346546786543'
-    SCORE2 DB '2748273719473945927499865346546786543637563847284736'
-    SCORE3 DB '7362748273719473945927499865346546786543637563847284'
-    SCORE4 DB '5467865463756384728473627482737194739459274998653463'
-    SCORE5 DB '4827371947394592749986534654678654637563847284736273'
-    SCORE6 DB '0200000000000000000000000000000000000000000000000000'
-    TOTAL DB '1230000000000000000000000000000000000000000000000000',
-    '000000000000'
-    
+    SCORE1 DB '0102030405060708091011121314151617181920212223242526'
+    SCORE2 DB '0000000000000000000000000000000000000000000000000000'
+    SCORE3 DB '0000000000000000000000000000000000000000000000000000'
+    SCORE4 DB '0000000000000000000000000000000000000000000000000000'
+    SCORE5 DB '0000000000000000000000000000000000000000000000000000'
+    SCORE6 DB '0000000000000000000000000000000000000000000000000000'
+    TOTAL  DB '0000000000000000000000000000000000000000000000000000',
+    '00000000000000000000000000'
+    LS DB 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26
     DIR DB 'Please enter the NO.$'
     COMMAND DB 'Please input the command. 1:show one, 2: set 6th score.$'
     SETSCOREDIR DB 'Please input the score.$'
@@ -51,6 +51,59 @@ SHOWTOTAL MACRO SCORE
 	INT 21H
 	ENDM
 	
+;---------------------------------------
+;-------展示列表，冒泡排序
+;---------------------------------------
+SHOWLIST MACRO N
+
+	MOV CH,N - 1
+	MOV SI,0
+	CALC_L:
+		MOV CL,LS[SI]
+		CALL CALC
+		INC SI
+		DEC CH
+		CMP CH,0
+		JNZ CALC_L
+
+
+	;把总人数存入CL
+	MOV CL,N - 1
+	
+	;对LS数组进行排序
+	FIR_L:
+		MOV CH,CL
+		MOV DL,N - 1
+		SEC_L:
+			;---DL=>当前位置
+			MOV AL,DL
+			MUL CHENG3
+			MOV BX,AX
+			
+			CALL COMPARE
+			DEC DL
+			DEC CH
+			CMP CH,0
+			JNZ SEC_L
+		DEC CL
+		CMP CL,0
+		JNZ FIR_L
+	
+	;显示出来
+	MOV CH,N - 1
+	MOV SI,0
+	SHOW_L:
+		MOV CL,LS[SI]
+		CALL SHOWONE
+		INC SI
+		DEC CH
+		CMP CH,0
+		JNZ SHOW_L
+		
+	
+	
+	
+	ENDM
 ;---------------------------------------
 ;-------展示一门的分数
 ;---------------------------------------
@@ -119,6 +172,10 @@ L:
 	CMP BUF[2],32H
 	JZ SETSEC
 	
+	;如果输入的是3，跳转到“showListSec(显示排行的部分)”
+	CMP BUF[2],33H
+	JZ SHOWLISTSEC
+	
 	;若输入其他，循环继续
 	JMP L
 
@@ -126,10 +183,23 @@ L:
 ;------showOneSec(展示一个人的信息的部分)
 ;-----------------------------------------
 SHOWONESEC:
+	;调用“获得学号”函数，将学号存入CL
+	CALL GETNUM
+	
 	;调用展示一个人信息的函数
 	CALL SHOWONE
 	JMP L
 	
+;-----------------------------------------
+;------showListSec(显示排行的部分)--------
+;-----------------------------------------
+SHOWLISTSEC:
+	SHOWLIST 26
+	JMP L
+		
+;-----------------------------------------
+;------setSec(设置6th分数的部分)--------
+;-----------------------------------------
 SETSEC:
 	CALL GETNUM
 	
@@ -166,8 +236,26 @@ SETSEC:
 ;------展示一个人的信息
 ;-----------------------------------------
 SHOWONE PROC NEAR
-	;调用“获得学号”函数，将学号存入CL
-	CALL GETNUM
+	MOV AL,CL
+	MOV AH,0
+	DIV CHENG10
+	ADD AH,30H
+	ADD AL,30H
+	
+	MOV DH,AH
+	
+	MOV DL,AL
+	MOV AH,2
+	INT 21H
+	
+	MOV DL,DH
+	MOV AH,2
+	INT 21H
+	
+	;打印空格
+	MOV DL,32
+	MOV AH,2
+	INT 21H
 	
 	;计算总分
 	CALL CALC
@@ -183,6 +271,12 @@ SHOWONE PROC NEAR
 	
 	;回车换行
 	ENTER1 CRLF
+	
+	
+	;打印空格
+	;MOV DL,32
+	;MOV AH,2
+	;INT 21H
 	
 	RET
 SHOWONE ENDP
@@ -314,15 +408,38 @@ CALC PROC NEAR
 	RET
 CALC ENDP
 
-
+;-----------------------------------------
+;------比较TOTAL中两数字的大小
+;-----------------------------------------
+COMPARE PROC NEAR
+	MOV AL,TOTAL[BX-3]
+	MOV AH,TOTAL[BX]
+	
+	CMP AL,AH
+	JL EXCHANGE
+	
+	MOV AL,TOTAL[BX-2]
+	MOV AH,TOTAL[BX+1]
+	CMP AL,AH
+	JL EXCHANGE
+	
+	MOV AL,TOTAL[BX-1]
+	MOV AH,TOTAL[BX+2]
+	CMP AL,AH
+	JL EXCHANGE
+	RET
+	
+EXCHANGE:
+	MOV BL,CL
+	MOV BH,0
+	MOV SI,BX
+	MOV AL,LS[SI]
+	MOV AH,LS[SI-1]
+	XCHG AH,AL
+	MOV LS[SI],AL
+	MOV LS[SI-1],AH
+	
+	RET
+COMPARE ENDP
 CODES ENDS
     END START
-
-
-
-
-
-
-
-
-
