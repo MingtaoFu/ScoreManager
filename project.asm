@@ -1,7 +1,7 @@
 
 DATAS SEGMENT
     ;此处输入数据段代码  
-    SCORE1 DB '0123456789098765432123456789098765432123456789098765'
+    SCORE1 DB '4123456789298765432123456789898765432123456789198765'
     SCORE2 DB '0000000000000000000000000000000000000000000000100000'
     SCORE3 DB '0000000000200000000000000000000000000000000000000000'
     SCORE4 DB '0000000000000000000000000000000000000000000000000000'
@@ -11,7 +11,7 @@ DATAS SEGMENT
     '00000000000000001001001000'
     LS DB 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26
     DIR DB 'Please enter the NO.$'
-    COMMAND DB 'Please input the command. 1:show one, 2: set 6th score.$'
+    COMMAND DB 'Please input the command. 1:show one, 2: set 6th score, 3:show list$'
     SETSCOREDIR DB 'Please input the score.$'
     CHENG10 DB 10
     CHENG2 DB 2
@@ -26,31 +26,6 @@ STACKS SEGMENT
     ;此处输入堆栈段代码
 STACKS ENDS
 
-;---------------------------------------
-;-------展示总分
-;---------------------------------------
-SHOWTOTAL MACRO SCORE
-	;学号（数字）放在CL中
-	MOV AL,CL
-	;总分为3位数，将学号×3，以定位到总分字符串的指定位置
-	MUL CHENG3
-	
-	MOV BX,AX
-	
-	;分别展示3位数
-	MOV DL,SCORE[BX]
-	MOV AH,2
-	INT 21H
-	
-	MOV DL,SCORE[BX+1]
-	MOV AH,2
-	INT 21H
-	
-	MOV DL,SCORE[BX+2]
-	MOV AH,2
-	INT 21H
-	ENDM
-	
 ;---------------------------------------
 ;-------展示列表，冒泡排序
 ;---------------------------------------
@@ -103,11 +78,36 @@ SHOWLIST MACRO N
 		DEC CH
 		CMP CH,0
 		JNZ SHOW_L
-		
-	
-	
 	
 	ENDM
+
+
+;---------------------------------------
+;-------展示总分
+;---------------------------------------
+SHOWTOTAL MACRO SCORE
+	;学号（数字）放在CL中
+	MOV AL,CL
+	;总分为3位数，将学号×3，以定位到总分字符串的指定位置
+	MUL CHENG3
+	
+	MOV BX,AX
+	
+	;分别展示3位数
+	MOV DL,SCORE[BX]
+	MOV AH,2
+	INT 21H
+	
+	MOV DL,SCORE[BX+1]
+	MOV AH,2
+	INT 21H
+	
+	MOV DL,SCORE[BX+2]
+	MOV AH,2
+	INT 21H
+	ENDM
+	
+
 ;---------------------------------------
 ;-------展示一门的分数
 ;---------------------------------------
@@ -436,9 +436,7 @@ COMPARE PROC NEAR
 	RET
 	
 EXCHANGE:
-	;MOV BL,DL
-	;MOV BH,0
-	;MOV SI,BX
+	
 	MOV AL,LS[SI]
 	MOV AH,LS[SI-1]
 	XCHG AH,AL
@@ -449,6 +447,7 @@ EXCHANGE:
 COMPARE ENDP
 CODES ENDS
     END START
+
 
 
 
